@@ -126,7 +126,12 @@ while T < TFINAL
             if isvector(events.ttevents{k})
                 period = events.ttevents{k}(1);
                 offsets =  events.ttevents{k}(2:end);
-                nextT = min(max(0, floor((T - offsets)/period + 1)) * period + offsets);
+                
+                % Check two steps to eliminate numerical errors
+                ksteps = max(0, floor((T - offsets)/period + 1));
+                allTs = ksteps * period + offsets;
+                allTs(allTs <= T) = [];  % Remove erroneous entries
+                nextT = min([allTs, ksteps * period + period + offsets]);
             else
                 nextT = max(T, events.ttevents{k}(T, Y));
             end
