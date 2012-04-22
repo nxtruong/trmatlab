@@ -100,8 +100,15 @@ end
 T = T0;
 Y = y0(:)';
 
+% Reserve memory in blocks to improve performance
+% For large systems, this helps improve the performance a lot.
+MemBlk = min(floor(1024*1024/8/length(y0)), 256);
+NPoints = 1;  % number of points in the result, used to free excess memory
+curMem = MemBlk;
+
 if nargout > 0
-    tempout = {T0, Y, [], [], []};
+    tempout = {repmat(T0, MemBlk, 1), repmat(Y, MemBlk, 1), [], [], []};
+    % tempout = {T0, Y, [], [], []};
     [varargout{1:nargout}] = tempout{1:nargout};
 end
 
@@ -130,7 +137,7 @@ while T < TFINAL
                 % Check two steps to eliminate numerical errors
                 ksteps = max(0, floor((T - offsets)/period + 1));
                 allTs = ksteps * period + offsets;
-                allTs(allTs <= T) = [];  % Remove erroneous entries
+                allTs(allTs <= T + eps) = [];  % Remove erroneous entries
                 nextT = min([allTs, ksteps * period + period + offsets]);
             else
                 nextT = max(T, events.ttevents{k}(T, Y));
@@ -151,9 +158,27 @@ while T < TFINAL
     % Save the outputs
     if nargout > 0
         % Save TOUT and YOUT
-        for k = 1:min(nargout,2)
-            varargout{k} = [varargout{k}; tempout{k}(2:end, :)];  % Cut the first row
+        nNewData = length(tempout{1});
+        
+        % Reserve more memory if necessary
+        if nNewData + NPoints - 1 > curMem
+            nNewBlocks = floor((nNewData + NPoints - 1 - curMem)/MemBlk) + 1;
+            for k = 1:min(nargout,2)
+                varargout{k} = [varargout{k};
+                    zeros(nNewBlocks*MemBlk, size(varargout{k}, 2))];
+            end
+            curMem = curMem + nNewBlocks*MemBlk;
         end
+        
+        for k = 1:min(nargout,2)
+            varargout{k}(NPoints+1:nNewData+NPoints-1, :) = ...
+                tempout{k}(2:end, :);  % Cut the first row
+        end
+        NPoints = NPoints + nNewData - 1;
+
+%         for k = 1:min(nargout,2)
+%             varargout{k} = [varargout{k}; tempout{k}(2:end, :)];  % Cut the first row
+%         end
     end
     
     if nargout > 2
@@ -183,6 +208,13 @@ while T < TFINAL
             warning('TTODE:Zeno', 'Zeno phenomenon happens at time t = %g.', T);
             break;
         end
+    end
+end
+
+% Free excess memory
+if nargout > 0 && NPoints < curMem
+    for k = 1:min(nargout,2)
+        varargout{k}(NPoints+1:end, :) = [];
     end
 end
 
