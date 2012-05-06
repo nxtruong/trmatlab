@@ -17,7 +17,7 @@ assert(length(x0) == obj.dims, 'Incompatible dimensions.');
 x0 = x0(:);
 
 % Check if x0 is in one of the hyperrectangles
-isin = any(all(bsxfun(@le, obj.L, x0) && bsxfun(@le, x0, obj.H)));
+isin = any(all(bsxfun(@le, obj.L, x0) & bsxfun(@le, x0, obj.H)));
 
 end
 
