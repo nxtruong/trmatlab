@@ -2,8 +2,11 @@ function ttode_test(x0, tfinal, T, a, b)
 %[tout, yout, te, ie, ye] = ode45(@func, [0, tfinal], x0, odeset('Events', @events,'MaxStep',T/50));
 %[tout, yout, te, ie, ye] = ode45(@func, [0, tfinal], x0, odeset('Events',
 %@events));
+tic;
 [tout, yout] = ttode(@ode45, struct('ttevents', {{[T, a*T, b*T]}}),...
     @func, [0, tfinal], x0);
+toc
+
 plot(yout(:,1), yout(:,2));
 
     function dy = func(t,y)

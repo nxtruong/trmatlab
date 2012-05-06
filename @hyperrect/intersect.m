@@ -24,7 +24,7 @@ if H1.dims * size(H1.L, 2) * size(H2.L, 2) > 10000
         min(H2.L, [], 2), max(H2.H, [], 2));
 
     % If these boxes are disjoint, H1 and H2 are disjoint
-    if emptyBox
+    if isempty(Bl)
         H1 = hyperrect;
         return;
     end

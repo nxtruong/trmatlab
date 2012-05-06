@@ -20,7 +20,7 @@ boundl = min(A.L, [], 2);
 boundh = max(A.H, [], 2);
 
 % Remove those in B that are out of the bounding box
-idx = any(bsxfun(@lt, B.H, boundl) || bsxfun(@gt, B.L, boundh));
+idx = any(bsxfun(@lt, B.H, boundl) | bsxfun(@gt, B.L, boundh));
 B.L(:, idx) = [];
 B.H(:, idx) = [];
 
@@ -31,7 +31,7 @@ boundh = max(B.H, [], 2);
 
 
 % Those in A that are out of that bounding box will not change
-idx = any(bsxfun(@lt, A.H, boundl) || bsxfun(@gt, A.L, boundh));
+idx = any(bsxfun(@lt, A.H, boundl) | bsxfun(@gt, A.L, boundh));
 C.L(:,~idx) = [];
 C.H(:,~idx) = [];
 A.L(:,idx) = [];
