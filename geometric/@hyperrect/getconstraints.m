@@ -22,7 +22,7 @@ if obj.dims == 0
 end
 
 % Find the number of inequalities and equalities
-idxeq = obj.Array.l == obj.Array.h;
+idxeq = obj.L == obj.H;
 neq = sum(idxeq);
 idxin = ~idxeq;
 
@@ -31,7 +31,7 @@ if neq < obj.dims
     Ain = eye(obj.dims);
     Ain(idxeq,:) = [];    % Remove dimensions c.t. equalities
     Ain = [Ain; -Ain];
-    bin = [obj.Array.h(idxin); -obj.Array.l(idxin)];
+    bin = [obj.H(idxin); -obj.L(idxin)];
 else
     Ain = [];
     bin = [];
@@ -40,7 +40,7 @@ end
 if neq > 0
     Aeq = eye(obj.dims);
     Aeq(idxin,:) = [];
-    beq = obj.Array.l(idxeq);
+    beq = obj.L(idxeq);
 else
     Aeq = [];
     beq = [];

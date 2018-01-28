@@ -13,7 +13,7 @@ function obj = hyperrect(A, B)
 %
 % (C) 2011 by Truong X. Nghiem (nghiem@seas.upenn.edu)
 
-% Last update: 2011-09-08
+% Last update: 2012-08-05
 
 error(nargchk(0, 2, nargin));
 
@@ -24,6 +24,8 @@ if nargin == 0
     return;
 end
 
+obj = init_fields;
+
 if nargin == 1
     if isa(A, 'hyperrect')  % used when objects are passed as arguments
         obj = A;
@@ -32,36 +34,28 @@ if nargin == 1
     assert(size(A, 2) == 2, 'First argument must be 2-column matrix of thresholds.');
     assert(all(A(:,1) <= A(:,2)), 'Lower thresholds cannot be larger than upper thresholds.');
     
-    obj = init_fields;
-    
-    % class name tag
-    obj = class(obj, 'hyperrect');
-
-    % Dimensions
     obj.dims = size(A, 1);
-
-    % Store the hyper-rectangle
-    obj.L = A(:,1);     % The thresholds
-    obj.H = A(:,2);     % The thresholds
-    
+    obj.L = A(:,1);
+    obj.H = A(:,2);
 else
-    obj = init_fields;
-    
-    % class name tag
-    obj = class(obj, 'hyperrect');
-
     B = B(:);
     A = A(:);
     
     % Dimensions
-    obj.dims = length(A);
-    assert(length(B) == obj.dims, 'Mismatched dimensions.');
-    assert(all(A <= B), 'Lower thresholds cannot be larger than upper thresholds.');
+    assert(length(B) == length(A), 'Mismatched dimensions.');
     
-    % Store the hyper-rectangle
-    obj.L = A;     % The thresholds
-    obj.H = B;     % The thresholds
+    if all(A <= B)
+        % Create the hyperrect
+        obj.L = A;
+        obj.H = B;
+        obj.dims = length(A);
+    end
+    % If lower thresholds are larger than upper thresholds, create
+    % empty hyperrect
 end
+
+% class name tag
+obj = class(obj, 'hyperrect');
 
 
 end
