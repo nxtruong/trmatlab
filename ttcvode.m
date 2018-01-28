@@ -52,13 +52,16 @@ function [varargout] = ttcvode(events, odefun, tspan, y0, options, LMM, NLS, las
 % (C) 2011 by Truong X. Nghiem (truong DOT nghiem AT gmail)
 %                              (OR nghiem AT seas DOT upenn DOT edu)
 
+% HISTORY
+%   2012-07-25  Truong fixed bug with ttevents containing function handles.
+
 % Process and Check input arguments
 error(nargchk(4, inf, nargin));
 error(nargchk(0, 2, nargout));
 
 assert(iscell(events), 'EVENTS must be a cell array; refer to the help.');
 assert(all(cellfun(...
-        @(c) isvector(c) || isa(c, 'function_handle'), events)),...
+        @(c) (isnumeric(c) && isvector(c)) || isa(c, 'function_handle'), events)),...
         'A cell in EVENTS must be either a vector or a function handle.');
 nEvents = numel(events);
     
@@ -117,7 +120,7 @@ while T < TFINAL
         nextEvent = TFINAL;
         
         for k = 1:nEvents
-            if isvector(events{k})
+            if isnumeric(events{k})
                 period = events{k}(1);
                 offsets =  events{k}(2:end);
                 

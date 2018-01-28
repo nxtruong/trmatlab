@@ -57,6 +57,10 @@ function [varargout] = ttode(solver, events, odefun, tspan, y0, varargin)
 % (C) 2011 by Truong X. Nghiem (truong DOT nghiem AT gmail)
 %                              (OR nghiem AT seas DOT upenn DOT edu)
 
+% HISTORY
+%   2012-07-25  Truong fixed bug with ttevents containing function
+%       handles, and a bug with initial state Y being row vector.
+
 % Process and Check input arguments
 error(nargchk(5, inf, nargin));
 error(nargchk(0, 5, nargout));
@@ -76,7 +80,7 @@ hasTTEvents = isfield(events, 'ttevents');
 if hasTTEvents
     assert(iscell(events.ttevents), 'EVENTS.TTEVENTS must be a cell array.');
     assert(all(cellfun(...
-        @(c) isvector(c) || isa(c, 'function_handle'), events.ttevents)),...
+        @(c) (isnumeric(c) && isvector(c)) || isa(c, 'function_handle'), events.ttevents)),...
         'A cell in EVENTS.TTEVENTS must be either a vector or a function handle.');
     nTTEvents = numel(events.ttevents);
 end
@@ -98,7 +102,7 @@ end
 % Initialize
 
 T = T0;
-Y = y0(:)';
+Y = y0(:);
 
 % Reserve memory in blocks to improve performance
 % For large systems, this helps improve the performance a lot.
@@ -107,7 +111,7 @@ NPoints = 1;  % number of points in the result, used to free excess memory
 curMem = MemBlk;
 
 if nargout > 0
-    tempout = {repmat(T0, MemBlk, 1), repmat(Y, MemBlk, 1), [], [], []};
+    tempout = {repmat(T0, MemBlk, 1), repmat(Y', MemBlk, 1), [], [], []};
     % tempout = {T0, Y, [], [], []};
     [varargout{1:nargout}] = tempout{1:nargout};
 end
@@ -130,7 +134,7 @@ while T < TFINAL
     nextEvent = TFINAL;
     if hasTTEvents
         for k = 1:nTTEvents
-            if isvector(events.ttevents{k})
+            if isnumeric(events.ttevents{k})
                 period = events.ttevents{k}(1);
                 offsets =  events.ttevents{k}(2:end);
                 
