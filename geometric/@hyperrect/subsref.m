@@ -8,10 +8,10 @@ function H = subsref(H, X)
 %
 % (C) 2011 by Truong X. Nghiem (nghiem@seas.upenn.edu)
 
-if numel(X) > 1,
+if numel(X) > 1
     error('??? Attempt to reference field of non-structure array.');
 else
-    if (~strcmp(X.type,'()')),
+    if (~strcmp(X.type,'()'))
         % only indexes in round brackets are allowed
         error(['Indexing with ''' X.type ''' not supported!']);
     end
