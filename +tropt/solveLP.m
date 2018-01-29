@@ -1,6 +1,6 @@
 function [xopt, objval, exitflag] = solveLP(solver, f, A, b, varargin)
 %TROPTIM.SOLVELP Interface to LP solvers
-%   [xopt,objval,exitflag] = solveLP(solver,f,A,b,Aeq,beq,lb,ub,x0,options)
+%   [xopt,objval,exitflag] = solveLP(solver,f,A,b,Aeq,beq,lb,ub,options)
 %   See linprog for input arguments.
 %   OUTPUTS:
 %     xopt   - optimal solution
@@ -15,9 +15,12 @@ function [xopt, objval, exitflag] = solveLP(solver, f, A, b, varargin)
 %
 %See also: LINPROG
 %
-% (C) 2012 by Truong X. Nghiem (nghiem@seas.upenn.edu)
+% (C) 2018 by Truong X. Nghiem (nghiem@seas.upenn.edu)
 
-error(nargchk(4, inf, nargin));
+% History:
+% 2018-01-29 Truong removed X0 argument; it's not used by any solver.
+
+narginchk(4, inf);
 
 if isempty(solver)
     if exist('cddmex', 'file')
@@ -85,30 +88,21 @@ end
 
     function solve_cdd
         ndim = length(f);
-        numvarargs = min(6, length(varargin));
+        numvarargs = min(5, length(varargin));
         
         % Default values for optional arguments
-        optargs = {[], [], [], [], [], []};
+        optargs = {[], [], [], [], []};
         optargs(1:numvarargs) = varargin(1:numvarargs);
-        [Aeq, beq, LB, UB, X0, options] = optargs{:}; %#ok<NASGU>
-        % X0 is not used
+        [Aeq, beq, LB, UB, options] = optargs{:}; %#ok<NASGU>
         
         IN = struct('obj', f.', 'A', [Aeq; A], 'B', [beq; b], 'lin', 1:length(beq));
         if ~isempty(LB)
             IN.A = [IN.A; -eye(ndim)];
-            if isscalar(LB)
-                IN.B = [IN.B; -LB*ones(ndim,1)];
-            else
-                IN.B = [IN.B; -LB];
-            end
+            IN.B = [IN.B; -LB];
         end
         if ~isempty(UB)
             IN.A = [IN.A; eye(ndim)];
-            if isscalar(UB)
-                IN.B = [IN.B; UB*ones(ndim,1)];
-            else
-                IN.B = [IN.B; UB];
-            end
+            IN.B = [IN.B; UB];
         end
 
         if isempty(options)
@@ -130,13 +124,12 @@ end
     end
 
     function solve_glpk
-        numvarargs = min(6, length(varargin));
+        numvarargs = min(5, length(varargin));
         
         % Default values for optional arguments
-        optargs = {[], [], [], [], [], []};
+        optargs = {[], [], [], [], []};
         optargs(1:numvarargs) = varargin(1:numvarargs);
-        [Aeq, beq, LB, UB, X0, options] = optargs{:}; %#ok<ASGLU>
-        % X0 is not used by GLPK
+        [Aeq, beq, LB, UB, options] = optargs{:}; %#ok<ASGLU>
         
         if ~isempty(Aeq) && ~isempty(beq)
             A = [Aeq; A];
@@ -176,11 +169,11 @@ end
         end
         
         % Default values for optional arguments
-        numvarargs = min(6, length(varargin));
+        numvarargs = min(5, length(varargin));
         
-        optargs = {[], [], [], [], [], []};
+        optargs = {[], [], [], [], []};
         optargs(1:numvarargs) = varargin(1:numvarargs);
-        [Aeq, beq, LB, UB, X0, options] = optargs{:};
+        [Aeq, beq, LB, UB, options] = optargs{:};
         
         MODEL = struct(... % MODEL
             'obj', f,...    % objective vector
@@ -205,11 +198,6 @@ end
         % set
         if ~isempty(UB)
             MODEL.ub = UB;
-        end
-        
-        % X0
-        if ~isempty(X0)
-            MODEL.start = double(X0);
         end
         
         if isempty(options)
